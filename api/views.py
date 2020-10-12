@@ -5,7 +5,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, BasePermission, \
     AllowAny
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
 from rest_framework import viewsets, filters, mixins
 from api.serializers import *
 from api.permissions import *
@@ -13,16 +12,31 @@ from api.models import *
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-class UsersCreate(ModelViewSet):
-    queryset = User.objects.all()
+
+class UserViewSet(viewsets.ModelViewSet):
     serializer_class = CreateUserSerializer
-    lookup_field = 'username'
-    permission_classes = [IsAdminOrReadOnly, ]
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated, UserPermission]
+    lookup_field = "username"
 
-    def perform_update(self, serializer):
-        serializer.save(data=self.request.data)
+    @action(methods=["GET"], detail=True)
+    def get_self_profile(self, request):
+        user = get_object_or_404(User, username=self.request.user.username)
+        serializer = CreateUserSerializer(user)
+        return Response(serializer.data)
 
-class RegisterView(APIView):
+    @action(methods=["PATCH"], detail=True)
+    def update_profile(self, request):
+        user = get_object_or_404(User, username=self.request.user.username)
+        serializer = CreateUserSerializer(
+            user, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class RegisterUsersView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -31,7 +45,6 @@ class RegisterView(APIView):
         email = request.data.get("email", )
         user, created = User.objects.get_or_create(email=email)
         confirmation_code = default_token_generator.make_token(user)
-
         #send_mail_to_user(email, confirmation_code)
         return Response({"email": email})
 
@@ -45,7 +58,6 @@ class CategoryAPIView(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
 
-#class GenresAPIView(generics.ListCreateAPIView):
 class GenresAPIView(viewsets.ModelViewSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
@@ -58,13 +70,13 @@ class GenresAPIView(viewsets.ModelViewSet):
 class TitlesAPIView(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['=name']
-    permission_classes = [IsAdminOrReadOnly]
+    #filter_backends = [filters.SearchFilter]
+    #search_fields = ['=name']
+    #permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewAPIView(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [OnlyCreatorPermission, IsAdminOrReadOnly]
        #IsAuthorOrIsStaffPermission, IsAuthPostPermission, ReadOnly]
@@ -75,7 +87,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             Titles,
             id=self.kwargs.get('title_id')
         )
-        return title.reviews.all()
+        return title.review.all()
 
     def perform_create(self, serializer):
         title = get_object_or_404(
@@ -98,3 +110,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
     #         title=title
     #     )
     #     return super().partial_update(request, *args, **kwargs)
+
+
+class CommentsAPIView(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    filter_backends = [filters.SearchFilter]
+    permission_classes = [IsAuthenticated, ReviewCommentPermission]
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        queryset = get_object_or_404(
+            Review,
+            id=self.kwargs.get("review_id"),
+            title=self.kwargs.get("title__id"), )
+        return queryset.comments.all()
+
+

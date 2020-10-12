@@ -32,15 +32,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='description')
 
-    # def validate(self, attrs):
-    #     author = self.context["request"].user.id,
-    #     title = self.context["view"].kwargs.get("title_id")
-    #     message = 'Author review already exist'
-    #     if not self.instance and Review.objects.filter(title=title,
-    #                                                    author=author).exists():
-    #         raise serializers.ValidationError(message)
-    #     return attrs
-
     class Meta:
         model = Review
         fields = '__all__'
@@ -102,3 +93,20 @@ class CreateUserSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("email",)
         model = User
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        many=False,
+        read_only=True,
+        slug_field='username'
+    )
+    comment = serializers.SlugRelatedField(
+        many=False,
+        read_only=True,
+        slug_field='id'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Comments

@@ -11,9 +11,10 @@ router = DefaultRouter()
 router.register(r'categories', CategoryAPIView, basename='categories')
 router.register(r'genres', GenresAPIView, basename='genres')
 router.register(r'titles', TitlesAPIView, basename='titles')
-router.register(r'titles/(?P<titles_id>\d+)/reviews', ReviewViewSet,
+router.register(r'titles/(?P<title_id>\d+)/reviews', ReviewAPIView,
                 basename='reviews')
-router.register(r'users', UsersCreate, basename='userscreate')
+router.register(r'users', UserViewSet, basename='userscreate')
+router.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments', CommentsAPIView, basename='comments')
 
 # router.register(r'posts/(?P<post_id>\d+)/comments', APICommentDetail,
 #                 basename='APIComment')

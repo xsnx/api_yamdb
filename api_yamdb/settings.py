@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'corsheaders',
+    'users_and_auth',
 ]
 
 MIDDLEWARE = [
@@ -143,7 +144,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_URLS_REGEX = r'^/api/.*$'
 
 
-AUTH_USER_MODEL = 'api.User'
+AUTH_USER_MODEL = 'users_and_auth.User'
 
 
 #  подключаем движок filebased.EmailBackend
