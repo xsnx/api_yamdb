@@ -70,9 +70,9 @@ class GenresAPIView(viewsets.ModelViewSet):
 class TitlesAPIView(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializer
-    #filter_backends = [filters.SearchFilter]
-    #search_fields = ['=name']
-    #permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=name']
+    permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
 
 
