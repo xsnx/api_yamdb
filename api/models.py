@@ -4,8 +4,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from users_and_auth.models import User
-#User = get_user_model()
+
+User = get_user_model()
 
 """
 Ресурс TITLES: произведения, к которым пишут отзывы (определённый фильм, книга или песенка).
@@ -40,7 +40,13 @@ class Titles(models.Model):
     )
     description = models.TextField(null=True, blank=True)
     #score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])
-    genre = models.ManyToManyField(Genres, verbose_name='genre')
+    genre = models.ForeignKey(
+        Genres,
+        on_delete=models.SET_NULL,
+        related_name="titles_of_genre",
+        blank=True,
+        null=True,
+    )
     category = models.ForeignKey(
         Categories,
         on_delete=models.SET_NULL,
@@ -94,5 +100,3 @@ class Comments(models.Model):
 
     class Meta:
         ordering = ['created']
-
-

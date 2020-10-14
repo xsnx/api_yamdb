@@ -1,5 +1,5 @@
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, BasePermission, \
@@ -16,24 +16,58 @@ from rest_framework.decorators import action
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = CreateUserSerializer
     queryset = User.objects.all()
+    #permission_classes = [AllowAny]
     permission_classes = [IsAuthenticated, UserPermission]
     lookup_field = "username"
 
-    @action(methods=["GET"], detail=True)
-    def get_self_profile(self, request):
-        user = get_object_or_404(User, username=self.request.user.username)
-        serializer = CreateUserSerializer(user)
-        return Response(serializer.data)
+    # @action(methods=["GET"], detail=True)
+    # def get_self_profile(self, request):
+    #     user = get_object_or_404(User, username=self.request.user.username)
+    #     serializer = CreateUserSerializer(user)
+    #     return Response(serializer.data)
+    #
+    # @action(methods=["PATCH"], detail=True)
+    # def update_profile(self, request):
+    #     user = get_object_or_404(User, username=self.request.user.username)
+    #     serializer = CreateUserSerializer(
+    #         user, data=request.data, partial=True
+    #     )
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+    #     return Response(serializer.data)
 
-    @action(methods=["PATCH"], detail=True)
-    def update_profile(self, request):
-        user = get_object_or_404(User, username=self.request.user.username)
-        serializer = CreateUserSerializer(
-            user, data=request.data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+#
+# class UserViewSet(viewsets.ModelViewSet):
+#     queryset = User.objects.all()
+#     serializer_class = CreateUserSerializer
+#     lookup_field = 'username'
+#
+#     def get_permissions(self):
+#         if self.action in ['get', 'patch', 'delete']:
+#             permission_classes = [IsAuthenticated]
+#         else:
+#             permission_classes = [IsAdminOrReadOnly]
+#         return [permission() for permission in permission_classes] \
+#
+#     @action(detail=True, methods=['patch', 'get', 'delete'])
+#     def get(self, request):
+#         user_email = request.user.email
+#         user = get_object_or_404(User, email=user_email)
+#         serializer = CreateUserSerializer(user, many=False)
+#         return Response(serializer.data)
+#
+#     def patch(self, request):
+#         user_email = request.user.email
+#         user = get_object_or_404(User, email=user_email)
+#         serializer = CreateUserSerializer(user, data=request.data,
+#                                           partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#
+#     def delete(self, request):
+#         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class RegisterUsersView(APIView):

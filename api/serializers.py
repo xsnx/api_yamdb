@@ -3,6 +3,8 @@ from rest_framework import serializers, viewsets
 from api.models import *
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
+User = get_user_model()
+
 
 class CategoriesSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=200)
@@ -23,7 +25,6 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    #author = serializers.ReadOnlyField(source='author.username')
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username', many=False
     )
@@ -63,7 +64,6 @@ class TitlesSerializer(serializers.ModelSerializer):
         model = Titles
 
 
-
 class UpdateTitlesSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
 
@@ -77,6 +77,22 @@ class UpdateTitlesSerializer(serializers.Serializer):
         def update(self, instance, validated_data):
             instance.name = validated_data.get('name', instance.name)
             return instance
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        many=False,
+        read_only=True,
+        slug_field='username'
+    )
+    comment = serializers.SlugRelatedField(
+        many=False,
+        read_only=True,
+        slug_field='id'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Comments
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -94,20 +110,3 @@ class CreateUserSerializer(serializers.ModelSerializer):
         #fields = ("email",)
         fields = '__all__'
         model = User
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        many=False,
-        read_only=True,
-        slug_field='username'
-    )
-    comment = serializers.SlugRelatedField(
-        many=False,
-        read_only=True,
-        slug_field='id'
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = Comments
