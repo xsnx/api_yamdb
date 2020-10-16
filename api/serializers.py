@@ -12,7 +12,8 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Categories
-        fields = '__all__'
+        #fields = '__all__'
+        fields = ('name', 'slug')
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -21,27 +22,24 @@ class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genres
-        fields = '__all__'
+        #fields = '__all__'
+        fields = ('name', 'slug')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username', many=False
-    )
-    title = serializers.SlugRelatedField(
-        many=False,
-        read_only=True,
-        slug_field='description')
+    author = serializers.ReadOnlyField(source='author.username')
+
+    def validate(self, attrs):
+        author = self.context["request"].user.id,
+        title = self.context["view"].kwargs.get("title_id")
+        message = 'Author review already exist'
+        if not self.instance and Review.objects.filter(title=title, author=author).exists():
+            raise serializers.ValidationError(message)
+        return attrs
 
     class Meta:
         model = Review
-        fields = '__all__'
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=['author', 'title']
-            )
-        ]
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
 
 class TitlesSerializer(serializers.ModelSerializer):
@@ -61,37 +59,26 @@ class TitlesSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'name', 'year', 'rating', 'description', 'category',
                   'genre')
+        #fields = '__all__'
         model = Titles
 
-
-class UpdateTitlesSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=200)
-
-    class Meta:
-        fields = ('id', 'name')
-        model = Titles
-
-        def create(self, validated_data):
-            return Titles(**validated_data)
-
-        def update(self, instance, validated_data):
-            instance.name = validated_data.get('name', instance.name)
-            return instance
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        many=False,
-        read_only=True,
-        slug_field='username'
-    )
-    comment = serializers.SlugRelatedField(
-        many=False,
-        read_only=True,
-        slug_field='id'
-    )
+    # author = serializers.SlugRelatedField(
+    #     many=False,
+    #     read_only=True,
+    #     slug_field='username'
+    # )
+    # comment = serializers.SlugRelatedField(
+    #     many=False,
+    #     read_only=True,
+    #     slug_field='comment'
+    # )
+    #review = serializers.SlugRelatedField(slug_field='review', read_only=True)
 
     class Meta:
         fields = '__all__'
+        #fields = ('id', 'reviews', 'author', 'text')
         model = Comments
 
 
@@ -106,7 +93,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=User.objects.all())],
     )
 
+
     class Meta:
-        #fields = ("email",)
-        fields = '__all__'
         model = User
+        fields = ('username', 'role', 'email', 'first_name', 'last_name', 'bio')

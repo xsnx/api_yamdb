@@ -28,9 +28,11 @@ class CommentsAdmin(admin.ModelAdmin):
     list_display = ("pk", 'reviews', 'author', 'text', 'created')
     empty_value_display = "-пусто-"
 
+
 class UserAdmin(admin.ModelAdmin):
     list_display = ("pk", 'role', 'username', 'email', 'bio')
     empty_value_display = "-пусто-"
+
 
 admin.site.register(Categories, CategoriesAdmin)
 admin.site.register(Genres, GenresAdmin)

@@ -31,9 +31,6 @@ class ReviewCommentPermission(BasePermission):
                     request.user.role == 'moderator' or
                     request.user.is_staff or request.user.is_superuser)
 
-class UserPermission(BasePermission):
-    pass
-
 
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):

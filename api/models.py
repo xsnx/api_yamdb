@@ -26,7 +26,7 @@ class Categories(models.Model):
 
 class Genres(models.Model):
     name = models.CharField(max_length=100, blank=False)
-    slug = models.SlugField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100)
 
     def __str__(self):
         return self.name
@@ -43,23 +43,20 @@ class Titles(models.Model):
     genre = models.ForeignKey(
         Genres,
         on_delete=models.SET_NULL,
-        related_name="titles_of_genre",
+        related_name="titles",
         blank=True,
         null=True,
     )
     category = models.ForeignKey(
         Categories,
         on_delete=models.SET_NULL,
-        related_name='titles_of_category',
+        related_name='titles',
         blank=True,
         null=True,
     )
 
     def __str__(self):
         return self.name
-
-    def get_genres(self):
-        return "\n".join([i.name for i in self.genre.all()])
 
 
 class Review(models.Model):
@@ -78,19 +75,18 @@ class Review(models.Model):
     score = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)])
 
-    # rating = RatingField(range=10)
 
     def __str__(self):
         return self.text
 
     class Meta:
-        # unique_together = ['author', 'title']
+        unique_together = ['author', 'title']
         ordering = ['-pub_date']
 
 
 class Comments(models.Model):
     reviews = models.ForeignKey(Review, on_delete=models.CASCADE,
-                                related_name='review', blank=True, null=True)
+                                related_name='comments', blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField(max_length=1000)
     created = models.DateTimeField("date published", auto_now_add=True)
