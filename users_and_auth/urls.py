@@ -5,32 +5,19 @@ from rest_framework_simplejwt.views import (
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from . import views
+from .views import UserMeView, UserViewSet, get, token
     
 urlpatterns = [
-        path('', views.get),
-        # path('v1/auth/token/', views.GetTokenAPIView.as_view(), name='token_obtain_pair'),
-        path('v1/auth/token/', views.token),
-
-
-        path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-        # path('email/', Reg_user.as_view(), name='reg_user'),
+        path('', get),
+        path('v1/auth/token/', token),
+        path('v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+        path('v1/users/me/', UserMeView.as_view()),
     ]
-
-
-
-
-
-
-
 router = DefaultRouter()
 router.register(r'users',
-    views.UserViewSet, basename='api_users')
-router.register(r'users/my',
-    views.UserMyViewSet, basename='api_users_my')
-
-
-
+    UserViewSet, basename='api_users')   
 urlpatterns += [
     path('v1/', include(router.urls)),
     ]
+
+print(urlpatterns)
