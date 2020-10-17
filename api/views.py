@@ -22,6 +22,54 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, BasePermission]
     lookup_field = 'username'
 
+    # @action(methods=["GET"], detail=True)
+    # def get_self_profile(self, request):
+    #     user = get_object_or_404(User, username=self.request.user.username)
+    #     serializer = CreateUserSerializer(user)
+    #     return Response(serializer.data)
+    #
+    # @action(methods=["PATCH"], detail=True)
+    # def update_profile(self, request):
+    #     user = get_object_or_404(User, username=self.request.user.username)
+    #     serializer = CreateUserSerializer(
+    #         user, data=request.data, partial=True
+    #     )
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+    #     return Response(serializer.data)
+
+
+# class UserViewSet(viewsets.ModelViewSet):
+#     queryset = User.objects.all()
+#     serializer_class = CreateUserSerializer
+#     lookup_field = 'username'
+#
+#     def get_permissions(self):
+#         if self.action in ['get', 'patch', 'delete']:
+#             permission_classes = [IsAuthenticated]
+#         else:
+#             permission_classes = [ReviewCommentPermission]
+#         return [permission() for permission in permission_classes]
+#
+#     @action(detail=True, methods=['patch', 'get', 'delete'])
+#     def get(self, request):
+#         user_email = request.user.email
+#         user = get_object_or_404(User, email=user_email)
+#         serializer = CreateUserSerializer(user, many=False)
+#         return Response(serializer.data)
+#
+#     def patch(self, request):
+#         user_email = request.user.email
+#         user = get_object_or_404(User, email=user_email)
+#         serializer = CreateUserSerializer(user, data=request.data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#
+#     def delete(self, request):
+#         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
 
 class RegisterUsersView(APIView):
     permission_classes = (AllowAny,)
@@ -63,6 +111,31 @@ class TitlesAPIView(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
 
+    # def check_exists(self):  # проверка наличия жанра и категории в базе
+    #     category = self.request.data.get("category", None)
+    #     #genre = self.request.data.getlist("genres", None)
+    #     self.cat_obj = None
+    #     self.gen_objects = []
+    #     #genre = self.request.data.get("genre", None)
+    #     if 'multipart/form-data' in self.request.content_type:
+    #         genre = self.request.data.getlist("genre", None)
+    #     else:
+    #         genre = self.request.data.get("genre", None)
+    #     if isinstance(genre, str):
+    #         genre = self.request.data.getlist("genre", None)
+    #     if (category is None) and (genre is None):
+    #         exists_status = True
+    #     else:
+    #         try:
+    #             if category:
+    #                 self.cat_obj = Categories.objects.get(slug=category)
+    #             if genre:
+    #                 self.gen_objects = Genres.objects.filter(slug__in=genre)
+    #             exists_status = True
+    #         except:
+    #             exists_status = False
+    #     return self.cat_obj, self.gen_objects, exists_status
+
 
 class ReviewAPIView(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
@@ -90,18 +163,33 @@ class ReviewAPIView(viewsets.ModelViewSet):
 class CommentsAPIView(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     filter_backends = [filters.SearchFilter]
-    #permission_classes = [AllowAny, ReviewCommentPermission]
-    permission_classes = [AllowAny]
+    #permission_classes = [ReviewCommentPermission]
+    #permission_classes = [AllowAny]
     pagination_class = PageNumberPagination
-
-    # def get_queryset(self):
-    #     queryset = get_object_or_404(
-    #         Review,
-    #         id=self.kwargs.get("review_id"),
-    #         title=self.kwargs.get("title__id"), )
-    #     return queryset.comments.all()
+    #queryset = Comments.objects.all()
+    permission_classes = [ReviewCommentPermission]
 
     def get_queryset(self):
-        comments = get_list_or_404(Comments, review_id=self.kwargs.get('review_id'))
-        return comments
+        queryset = get_object_or_404(
+            Review,
+            id=self.kwargs.get("review_id"),
+            title=self.kwargs.get("title_id"), )
+        return queryset.comments.all()
+
+    # def get_queryset(self):
+    #     comments = get_list_or_404(Comments, reviews=self.kwargs.get('review_id'))
+    #     return comments
+
+    def perform_create(self, serializer):
+        reviews = get_object_or_404(
+            Review,
+            id=self.kwargs.get("review_id"),
+            title=self.kwargs.get("title_id"), )
+        #     Review,
+        #     id=self.kwargs.get('review_id')
+        # )
+        serializer.save(
+            author=self.request.user,
+            reviews=reviews
+        )
 

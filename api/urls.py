@@ -16,8 +16,7 @@ router.register(r'titles/(?P<title_id>\d+)/reviews', ReviewAPIView,
                 basename='reviews')
 router.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
-    ReviewAPIView, basename='comments')
-
+    CommentsAPIView, basename='comments')
 
 urlpatterns = [
     path('v1/auth/token/', TokenObtainPairView.as_view(),
