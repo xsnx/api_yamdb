@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from datetime import date
 
 from django.contrib.auth import get_user_model
@@ -98,3 +99,8 @@ class Comments(models.Model):
 
     class Meta:
         ordering = ['-pub_date']
+=======
+from django.db import models
+
+# Create your models here.
+>>>>>>> a97b56982a67d5f79dc37082d7b088307db66ede
