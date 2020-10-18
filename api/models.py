@@ -1,11 +1,7 @@
-<<<<<<< HEAD
 from datetime import date
-
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.utils.datetime_safe import datetime
 
 User = get_user_model()
 
@@ -20,8 +16,7 @@ User = get_user_model()
 
 class Categories(models.Model):
     name = models.CharField(max_length=100, blank=False)
-    slug = models.SlugField(max_length=100) #, unique=True)
-    #slug = models.SlugField(unique=True, default=uuid.uuid1) #1
+    slug = models.SlugField(max_length=100)
 
     def __str__(self):
         return self.name
@@ -42,7 +37,9 @@ class Titles(models.Model):
         validators=[MaxValueValidator(date.today().year)]
     )
     description = models.TextField(null=True, blank=True)
-    score = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(10)])
+    score = models.IntegerField(null=True, blank=True,
+                                validators=[MinValueValidator(1),
+                                            MaxValueValidator(10)])
     genre = models.ForeignKey(
         Genres,
         on_delete=models.SET_NULL,
@@ -76,8 +73,8 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField("review date", auto_now_add=True)
     score = models.IntegerField(null=True, blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)])
-
+                                validators=[MinValueValidator(1),
+                                            MaxValueValidator(10)])
 
     def __str__(self):
         return self.text
@@ -90,7 +87,11 @@ class Review(models.Model):
 class Comments(models.Model):
     reviews = models.ForeignKey(Review, on_delete=models.CASCADE,
                                 related_name='comments', blank=True, null=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
     text = models.TextField(max_length=1000)
     pub_date = models.DateTimeField("comment date", auto_now_add=True)
 
@@ -99,8 +100,3 @@ class Comments(models.Model):
 
     class Meta:
         ordering = ['-pub_date']
-=======
-from django.db import models
-
-# Create your models here.
->>>>>>> a97b56982a67d5f79dc37082d7b088307db66ede
