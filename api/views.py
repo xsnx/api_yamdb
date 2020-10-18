@@ -82,8 +82,7 @@ class ReviewAPIView(viewsets.ModelViewSet):
 class CommentsAPIView(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     filter_backends = [filters.SearchFilter]
-    permission_classes = [ReviewCommentPermission]
-    # permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly, ReviewCommentPermission]
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
@@ -97,7 +96,7 @@ class CommentsAPIView(viewsets.ModelViewSet):
         reviews = get_object_or_404(
             Review,
             id=self.kwargs.get("review_id"),
-            title=self.kwargs.get("title_id"), )
+            title__id=self.kwargs.get("title_id"), )
         serializer.save(
             author=self.request.user,
             reviews=reviews
