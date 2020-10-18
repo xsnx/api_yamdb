@@ -1,22 +1,19 @@
 from .models import User
 from .serializer import User_Serializer
-from .permissions import Permission1, Permission2
+from .permissions import Permission1
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import (
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-    DjangoModelPermissionsOrAnonReadOnly,
-    AllowAny)
+    IsAuthenticated)
 from rest_framework import viewsets
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
-from rest_framework.pagination import PageNumberPagination
-from .pagination import CustomPagination, CustomPagination1
+from .pagination import CustomPagination
 from rest_framework import status
+from django.core.mail import send_mail
+import random
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -26,71 +23,16 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
     lookup_field = 'username'
 
-    # def get_object(self):
-    #     if self.kwargs.get('username') == 'me':
-    #         obj = self.request.user
-
-    #         return obj
-    #     else:
-    #         queryset = self.filter_queryset(self.get_queryset())
-    #         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-    #         assert lookup_url_kwarg in self.kwargs, (
-    #             'Expected view %s to be called with a URL keyword argument '
-    #             'named "%s". Fix your URL conf, or set the `.lookup_field` '
-    #             'attribute on the view correctly.' %
-    #             (self.__class__.__name__, lookup_url_kwarg)
-    #         )
-    #         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-    #         obj = get_object_or_404(queryset, **filter_kwargs)
-    #         self.check_object_permissions(self.request, obj)
-
-    #         return obj
-
-    # def get_queryset(self):
-    #     if self.kwargs.get('username') == 'me':
-
-    #         username = self.request.user.username
-    #         queryset = get_user_model().objects.filter(
-    #             username=username)
-    #         print(f'вывести текущего пользователя {queryset}')
-    #         return queryset
-    #     if self.kwargs.get('username') is None:
-    #         queryset = get_user_model().objects.all()
-    #         print('вывести все объекты')
-    #         return queryset
-    #     else:
-    #         username = self.kwargs.get('username')
-    #         queryset = get_user_model().objects.filter(
-    #             username=username)
-    #         print(f'вывести 1 объект {a}')
-    #         print(queryset)
-    #         return queryset
-    
-    # def list(self, request, *args, **kwargs):
-    #     if self.request.user.role not in ('admin',):
-    #         print(f'Роль Usera - {self.request.user.role}')
-    #         return Response(status=status.HTTP_403_FORBIDDEN)
-    #     queryset = self.filter_queryset(self.get_queryset())
-
-    #     page = self.paginate_queryset(queryset)
-    #     if page is not None:
-    #         serializer = self.get_serializer(page, many=True)
-    #         return self.get_paginated_response(serializer.data)
-
-    #     serializer = self.get_serializer(queryset, many=True)    
-    #     return Response(serializer.data)
 
 class UserMeView(APIView):
-    
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        if request.user is None or not request.user.is_authenticated:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            user = request.user
-            print(user)
-            serializer = User_Serializer(user, many=False)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-            
+        user = request.user
+        print(user)
+        serializer = User_Serializer(user, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def patch(self, request):
         user = request.user
         serializer = User_Serializer(
@@ -108,32 +50,42 @@ def get_tokens_for_user(user):
         'access': str(refresh.access_token),
     }
 
-class GetTokenAPIView(APIView):
-    permission_classes = (AllowAny,)
-    @api_view(('POST',))
-    def post(self, request):
-        email = request.data.get('email')
-        user = get_object_or_404(User, email=email)
-        code = request.data.get('confirmation_code')
-        if user.confirmation_code == code:
-            tokens = get_tokens_for_user(user)
-            return Response({"message": tokens})
-        return Response({"message": "неверный код подтверждения."})
-
-@api_view(('GET',))
-def get(request):
-    data = {'aaa': 'AAA'}
-    users = get_user_model().objects.all()
-    print(users)
-    seria = User_Serializer(users, many=True)
-
-    return Response(seria.data)
 
 @api_view(('POST',))
 def token(request):
     email = request.data.get('email')
-    print(email)
-    user = get_object_or_404(User, email=email)
-    seria = User_Serializer(user, many=False)
+    confirmation_code = request.data.get('confirmation_code')
+    user = get_object_or_404(
+        User, email=email, confirmation_code=confirmation_code)
     tokens = get_tokens_for_user(user)
     return Response({"message": tokens})
+
+
+@api_view(('POST',))
+def reg_user_email(request):
+    if not request.data.get('email'):
+        return Response({'message': {
+            'Ошибка': 'Не указана почта для регистрации'}})
+    try:
+        email = request.data.get('email')
+        a = get_user_model().objects.filter(email=email)
+    except:
+        return Response({'message': {
+            'Ошибка': 'Пользователь с такой почтой уже зарегистрирован'}})
+    email = request.data.get('email')
+    confirmation_code = random.randint(200, 1000)
+    try:
+        get_user_model().objects.create(email=email, username=email)
+    except:
+        return Response({'message': {
+            'Ошибка': 'Чего-то не создался пользователь'}})
+    send_mail(
+        'Подтверждение адреса электронной почты YaTube',
+        'Вы получили это письмо, потому что регистрируетесь на ресурсе '
+        'YaTube Код подтверждения confirmation_code=' + str(confirmation_code),
+        'info@yatube.ru',
+        [email,],
+        fail_silently=False,)
+    return Response({'message': {
+        'ОК': f'Пользователь c email {email} создан успешно. '
+        'Код подтверждения отправлен на электронную почту'}})

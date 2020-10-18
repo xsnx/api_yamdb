@@ -1,6 +1,7 @@
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response    
-    
+from rest_framework.response import Response
+
+
 class CustomPagination(PageNumberPagination):
 
     def get_paginated_response(self, response):
@@ -10,10 +11,3 @@ class CustomPagination(PageNumberPagination):
                 'previous': self.get_previous_link(),
                 'results': response
             })
-
-class CustomPagination1(PageNumberPagination):
-
-    def get_paginated_response(self, response):
-        return Response(
-                response
-            )
