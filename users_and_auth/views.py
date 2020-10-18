@@ -18,6 +18,7 @@ from rest_framework.pagination import PageNumberPagination
 from .pagination import CustomPagination, CustomPagination1
 from rest_framework import status
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = get_user_model().objects.all()
     serializer_class = User_Serializer
@@ -80,26 +81,24 @@ class UserViewSet(viewsets.ModelViewSet):
     #     return Response(serializer.data)
 
 class UserMeView(APIView):
+    
     def get(self, request):
-        if request.user is None:
+        if request.user is None or not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         else:
             user = request.user
             print(user)
             serializer = User_Serializer(user, many=False)
             return Response(serializer.data, status=status.HTTP_200_OK)
+            
     def patch(self, request):
-        if request.user is None:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            user = request.user
-            serializer = User_Serializer(
-                user, data=request.data, many=False, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
+        user = request.user
+        serializer = User_Serializer(
+            user, data=request.data, many=False, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
 
 def get_tokens_for_user(user):

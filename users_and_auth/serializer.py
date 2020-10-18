@@ -10,5 +10,6 @@ class User_Serializer(serializers.ModelSerializer):
     
 
     class Meta:
-        fields = ('__all__')
+        fields = ('username', 'role', 'email', 'confirmation_code',
+                  'password', 'bio', 'first_name', 'last_name')
         model = get_user_model()
