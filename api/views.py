@@ -5,10 +5,10 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import viewsets, filters, mixins
 from rest_framework.viewsets import GenericViewSet
-
-from api.serializers import *
-from api.permissions import *
-from api.models import *
+from api.serializers import CategoriesSerializer, GenresSerializer, \
+    ReviewSerializer, TitlesSerializer, CommentSerializer
+from api.permissions import IsAdminOrReadOnly, ReviewCommentPermission
+from api.models import Categories, Genres, Titles, Review
 from rest_framework.response import Response
 
 

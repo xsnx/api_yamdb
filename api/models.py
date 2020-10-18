@@ -38,7 +38,8 @@ class Titles(models.Model):
     )
     description = models.TextField(null=True, blank=True)
     score = models.IntegerField(null=True, blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)])
+                                validators=[MinValueValidator(1),
+                                            MaxValueValidator(10)])
     genre = models.ForeignKey(
         Genres,
         on_delete=models.SET_NULL,
@@ -53,7 +54,6 @@ class Titles(models.Model):
         blank=True,
         null=True,
     )
-
 
     def __str__(self):
         return self.name
@@ -73,7 +73,8 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField("review date", auto_now_add=True)
     score = models.IntegerField(null=True, blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)])
+                                validators=[MinValueValidator(1),
+                                            MaxValueValidator(10)])
 
     def __str__(self):
         return self.text

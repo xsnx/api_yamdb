@@ -54,22 +54,6 @@ class TitlesSerializer(serializers.ModelSerializer):
         model = Titles
 
 
-class CreateUserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())],
-    )
-    username = serializers.CharField(
-        required=False,
-        default=None,
-        validators=[UniqueValidator(queryset=User.objects.all())],
-    )
-
-    class Meta:
-        model = User
-        fields = ('username', 'role', 'email', 'first_name', 'last_name', 'bio')
-
-
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         many=False,

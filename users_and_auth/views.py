@@ -1,12 +1,8 @@
 from .models import User
 from .serializer import User_Serializer
-from .permissions import Permission1, Permission2
+from .permissions import Permission1
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import (
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-    DjangoModelPermissionsOrAnonReadOnly,
-    AllowAny)
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework import viewsets
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
