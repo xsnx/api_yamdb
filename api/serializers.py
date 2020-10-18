@@ -33,7 +33,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         author = self.context["request"].user.id,
         title = self.context["view"].kwargs.get("title_id")
         message = 'Author review already exist'
-        if not self.instance and Review.objects.filter(title=title, author=author).exists():
+        if not self.instance and Review.objects.filter(title=title,
+                                                       author=author).exists():
             raise serializers.ValidationError(message)
         return attrs
 
@@ -45,12 +46,12 @@ class ReviewSerializer(serializers.ModelSerializer):
 class TitlesSerializer(serializers.ModelSerializer):
     rating = serializers.DecimalField(read_only=True, max_digits=10,
                                       decimal_places=1, coerce_to_string=False)
-    category = CategoriesSerializer(read_only=True, many=True)
-    genre = GenresSerializer(read_only=True, many=True)
+    category = CategoriesSerializer(read_only=True)
+    genre = GenresSerializer(read_only=True)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'rating', 'description', 'category',
-                  'genre')
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+                  'category')
         model = Titles
 
 

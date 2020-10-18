@@ -145,16 +145,5 @@ CORS_URLS_REGEX = r'^/api/.*$'
 
 
 AUTH_USER_MODEL = 'users_and_auth.User'
-
-
-#  подключаем движок filebased.EmailBackend
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# указываем директорию, в которую будут складываться файлы писем
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
-DEFAULT_FROM_EMAIL = 'site@gmail.com'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'myacc@gmail.com'
-EMAIL_HOST_PASSWORD = os.getenv('<passw>')
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-

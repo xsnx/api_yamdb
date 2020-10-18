@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 
 
@@ -9,5 +8,3 @@ class User(AbstractUser):
     password = models.CharField(max_length=128, blank=True)
     email = models.EmailField(max_length=128, blank=False, unique=True)
     bio = models.CharField(max_length=128, blank=True)
-    # class Meta:
-    #     proxy = True
