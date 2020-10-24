@@ -1,20 +1,19 @@
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from rest_framework.decorators import api_view, action
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import viewsets, filters, mixins
 from rest_framework.viewsets import GenericViewSet
-
-from api.filters import GenreFilter
+from api.filters import TitleFilter
 from api.serializers import CategoriesSerializer, GenresSerializer, \
     ReviewSerializer, TitlesSerializer, CommentSerializer, TitlesEditSerial
 from api.permissions import IsAdminOrReadOnly, ReviewCommentPermission
 from api.models import Categories, Genres, Titles, Review
 from rest_framework.response import Response
-
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters import rest_framework as djfilter
 
 class MixinsViewSets(mixins.CreateModelMixin, mixins.DestroyModelMixin,
                      mixins.ListModelMixin, GenericViewSet):
@@ -53,19 +52,23 @@ class GenresAPIView(MixinsViewSets):
 
 class TitlesAPIView(viewsets.ModelViewSet):
     queryset = Titles.objects.annotate(rating=Avg('review__score'))
-    #filterset_class = [GenreFilter]
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    #filters_fields = ['genre_slug', 'name', 'category']
-    filterset_fields = ['genre__slug', 'category__slug', 'year', 'name' ]
-    search_fields = ['=name']
     permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
+
+    __basic_fields = ('genre', 'category', 'year', 'name')
+    filter_backends = (djfilter.DjangoFilterBackend, SearchFilter)
+    #filter_fields = __basic_fields
+    #search_fields = __basic_fields
+
+    filterset_class = TitleFilter
+
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return TitlesSerializer
         else:
             return TitlesEditSerial
+
 
 class ReviewAPIView(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer

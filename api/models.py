@@ -52,9 +52,6 @@ class Titles(models.Model):
     def __str__(self):
         return self.name
 
-    # def get_genres(self):
-    #     return "\n".join([i.name for i in self.genre.all()])
-
 
 class Review(models.Model):
     title = models.ForeignKey(
