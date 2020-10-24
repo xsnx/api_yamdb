@@ -13,7 +13,7 @@ from api.permissions import IsAdminOrReadOnly, ReviewCommentPermission
 from api.models import Categories, Genres, Titles, Review
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
-from django_filters import rest_framework as djfilter
+
 
 class MixinsViewSets(mixins.CreateModelMixin, mixins.DestroyModelMixin,
                      mixins.ListModelMixin, GenericViewSet):
@@ -54,14 +54,10 @@ class TitlesAPIView(viewsets.ModelViewSet):
     queryset = Titles.objects.annotate(rating=Avg('review__score'))
     permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
-
     __basic_fields = ('genre', 'category', 'year', 'name')
-    filter_backends = (djfilter.DjangoFilterBackend, SearchFilter)
-    #filter_fields = __basic_fields
-    #search_fields = __basic_fields
-
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    search_fields = __basic_fields
     filterset_class = TitleFilter
-
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
