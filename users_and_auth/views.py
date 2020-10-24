@@ -1,5 +1,5 @@
 from .models import User
-from .serializer import User_Serializer
+from .serializer import UserSerializer, UserEditSerializer
 from .permissions import Permission1
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import (
@@ -18,7 +18,7 @@ import random
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = get_user_model().objects.all()
-    serializer_class = User_Serializer
+    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, Permission1]
     pagination_class = CustomPagination
     lookup_field = 'username'
@@ -30,12 +30,12 @@ class UserMeView(APIView):
     def get(self, request):
         user = request.user
         print(user)
-        serializer = User_Serializer(user, many=False)
+        serializer = UserSerializer(user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request):
         user = request.user
-        serializer = User_Serializer(
+        serializer = UserEditSerializer(
             user, data=request.data, many=False, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -65,17 +65,22 @@ def token(request):
 def reg_user_email(request):
     if not request.data.get('email'):
         return Response({'message': {
-            'Ошибка': 'Не указана почта для регистрации'}})
+            'Ошибка': 'Не указана почта для регистрации'}},
+             status=status.HTTP_403_FORBIDDEN)
     try:
         email = request.data.get('email')
         a = get_user_model().objects.filter(email=email)
+        if a is not None:
+            return Response({'message': {
+            'Ошибка': 'Пользователь с такой почтой уже зарегистрирован'}})
     except:
         return Response({'message': {
-            'Ошибка': 'Пользователь с такой почтой уже зарегистрирован'}})
+            'Ошибка': 'Ошибка запроса'}}, status=status.HTTP_403_FORBIDDEN)
     email = request.data.get('email')
     confirmation_code = random.randint(200, 1000)
     try:
-        get_user_model().objects.create(email=email, username=email)
+        get_user_model().objects.create(email=email, username=email,
+        confirmation_code=confirmation_code)
     except:
         return Response({'message': {
             'Ошибка': 'Чего-то не создался пользователь'}})
