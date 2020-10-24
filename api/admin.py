@@ -31,7 +31,7 @@ class CommentsAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Categories, CategoriesAdmin)
-admin.site.register(Genres, GenresAdmin)
-admin.site.register(Titles, TitlesAdmin)
+admin.site.register(Genres)
+admin.site.register(Titles)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(Comments, CommentsAdmin)

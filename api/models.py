@@ -40,13 +40,7 @@ class Titles(models.Model):
     score = models.IntegerField(null=True, blank=True,
                                 validators=[MinValueValidator(1),
                                             MaxValueValidator(10)])
-    genre = models.ForeignKey(
-        Genres,
-        on_delete=models.SET_NULL,
-        related_name="titles",
-        blank=True,
-        null=True,
-    )
+    genre = models.ManyToManyField(Genres)
     category = models.ForeignKey(
         Categories,
         on_delete=models.SET_NULL,
@@ -57,6 +51,9 @@ class Titles(models.Model):
 
     def __str__(self):
         return self.name
+
+    # def get_genres(self):
+    #     return "\n".join([i.name for i in self.genre.all()])
 
 
 class Review(models.Model):

@@ -7,8 +7,8 @@ User = get_user_model()
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=200)
-    slug = serializers.CharField(max_length=200, validators=[
+    name = serializers.CharField(max_length=100)
+    slug = serializers.CharField(max_length=100, validators=[
         UniqueValidator(queryset=Categories.objects.all())])
 
     class Meta:
@@ -17,8 +17,8 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
 
 class GenresSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=200)
-    slug = serializers.CharField(max_length=200, validators=[
+    name = serializers.CharField(max_length=100)
+    slug = serializers.CharField(max_length=100, validators=[
         UniqueValidator(queryset=Genres.objects.all())])
 
     class Meta:
@@ -47,7 +47,29 @@ class TitlesSerializer(serializers.ModelSerializer):
     rating = serializers.DecimalField(read_only=True, max_digits=10,
                                       decimal_places=1, coerce_to_string=False)
     category = CategoriesSerializer(read_only=True)
-    genre = GenresSerializer(read_only=True)
+    genre = GenresSerializer(many=True)
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+                  'category')
+        model = Titles
+
+
+class TitlesEditSerial(serializers.ModelSerializer):
+    rating = serializers.DecimalField(read_only=True, max_digits=10,
+                                      decimal_places=1, coerce_to_string=False)
+
+    category = serializers.SlugRelatedField(
+        queryset=Categories.objects.all(),
+        slug_field='slug',
+        required=False,
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genres.objects.all(),
+        slug_field='slug',
+        many=True,
+        required=False,
+        )
 
     class Meta:
         fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
