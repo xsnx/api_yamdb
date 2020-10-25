@@ -1,6 +1,6 @@
-from django_filters import rest_framework as filters
 import django_filters
-from api.models import Genres, Titles, Categories
+
+from api.models import Title
 
 
 class TitleFilter(django_filters.FilterSet):
@@ -11,9 +11,6 @@ class TitleFilter(django_filters.FilterSet):
                                          lookup_expr='iexact')
     name = django_filters.CharFilter(field_name="name", lookup_expr="contains")
 
-
     class Meta:
-        model = Titles
-        fields = ('genre','category', 'year', 'name',)
-        #fields = '__all__'
-        #fields = ['genre', 'id','category'] #'genre'] 'year''description','name'
+        model = Title
+        fields = ('genre', 'category', 'year', 'name',)

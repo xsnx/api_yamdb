@@ -1,36 +1,50 @@
 from datetime import date
+
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 User = get_user_model()
 
 """
-Ресурс TITLES: произведения, к которым пишут отзывы (определённый фильм, книга или песенка).
-Ресурс CATEGORIES: категории (типы) произведений («Фильмы», «Книги», «Музыка»).
-Ресурс GENRES: жанры произведений. Одно произведение может быть привязано к нескольким жанрам.
-Ресурс REVIEWS: отзывы на произведения. Отзыв привязан к определённому произведению.
-Ресурс COMMENTS: комментарии к отзывам. Комментарий привязан к определённому отзыву.
+Ресурс TITLE: произведения, к которым пишут отзывы (определённый фильм, книга
+или песенка).
+Ресурс CATEGORY: категории (типы) произведений («Фильмы», «Книги», «Музыка»).
+Ресурс GENRE: жанры произведений. Одно произведение может быть привязано к
+нескольким жанрам.
+Ресурс REVIEW: отзывы на произведения. Отзыв привязан к определённому
+произведению.
+Ресурс COMMENT: комментарии к отзывам. Комментарий привязан к определённому
+отзыву.
 """
 
 
-class Categories(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=100, blank=False)
     slug = models.SlugField(max_length=100)
+
+    class Meta:
+        ordering = ('-name',)
+        verbose_name = 'Category'
+        verbose_name_plural = 'Categories'
 
     def __str__(self):
         return self.name
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     name = models.CharField(max_length=100, blank=False)
     slug = models.SlugField(max_length=100)
+
+    class Meta:
+        ordering = ('-name',)
+        verbose_name = 'Genre'
 
     def __str__(self):
         return self.name
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField(max_length=100, blank=False)
     year = models.PositiveIntegerField(
         default=date.today().year,
@@ -40,33 +54,25 @@ class Titles(models.Model):
     score = models.IntegerField(null=True, blank=True,
                                 validators=[MinValueValidator(1),
                                             MaxValueValidator(10)])
-    #genre = models.ManyToManyField(Genres, related_name='genres', related_query_name='query_genres')
-        #, default=None, blank=True)
- #       Genres,
- #       related_name='genres',
- #       blank=True,
-  #  )
-    genre = models.ManyToManyField(Genres) #, verbose_name='genre',blank=True)
-    #genre = models.ForeignKey(Genres, on_delete=models.SET_NULL, related_name="genre", blank=True, null=True)
-#    )
+    genre = models.ManyToManyField(Genre)
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL,
+        related_name='titles',
+        blank=True,
+        null=True,
+    )
 
-    #category = models.ManyToManyField(Categories)
-    category = models.ForeignKey(Categories, on_delete=models.SET_NULL, related_name='titles', blank=True, null=True,)
- #   )
+    class Meta:
+        ordering = ('-year',)
+        verbose_name = 'Title'
 
     def __str__(self):
         return self.name
 
-  #  def get_genres(self):
-  #      return "\n".join([i.name for i in self.genre.all()])
-    
- #   def get_category(self):
-  #      pass
- #       return "\n".join([i.name for i in self.category.all()])
 
 class Review(models.Model):
     title = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         related_name="review"
     )
@@ -89,7 +95,7 @@ class Review(models.Model):
         ordering = ['-pub_date']
 
 
-class Comments(models.Model):
+class Comment(models.Model):
     reviews = models.ForeignKey(Review, on_delete=models.CASCADE,
                                 related_name='comments', blank=True, null=True)
     author = models.ForeignKey(
@@ -100,8 +106,9 @@ class Comments(models.Model):
     text = models.TextField(max_length=1000)
     pub_date = models.DateTimeField("comment date", auto_now_add=True)
 
+    class Meta:
+        ordering = ('-pub_date',)
+        verbose_name = 'Comment'
+
     def __str__(self):
         return self.text
-
-    class Meta:
-        ordering = ['-pub_date']

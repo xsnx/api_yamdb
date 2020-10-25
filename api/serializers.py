@@ -1,28 +1,30 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from api.models import Categories, Genres, Titles, Review, Comments
 from rest_framework.validators import UniqueValidator
+from rest_framework.permissions import BasePermission
+
+from api.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
 
-class CategoriesSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100)
     slug = serializers.CharField(max_length=100, validators=[
-        UniqueValidator(queryset=Categories.objects.all())])
+        UniqueValidator(queryset=Category.objects.all())])
 
     class Meta:
-        model = Categories
+        model = Category
         fields = ('name', 'slug')
 
 
-class GenresSerializer(serializers.ModelSerializer):
+class GenreSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100)
     slug = serializers.CharField(max_length=100, validators=[
-        UniqueValidator(queryset=Genres.objects.all())])
+        UniqueValidator(queryset=Genre.objects.all())])
 
     class Meta:
-        model = Genres
+        model = Genre
         fields = ('name', 'slug')
 
 
@@ -43,74 +45,37 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date')
 
 
-class TitlesSerializer(serializers.ModelSerializer):
+class TitleReadSerializer(serializers.ModelSerializer):
     rating = serializers.DecimalField(read_only=True, max_digits=10,
                                       decimal_places=1, coerce_to_string=False)
-    category = CategoriesSerializer(read_only=True)
-    genre = GenresSerializer(many=True)
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(many=True)
 
     class Meta:
- #       fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
- #                 'category')
         fields = '__all__'
-        model = Titles
+        model = Title
 
 
- #   rating = serializers.DecimalField(read_only=True, max_digits=10, decimal_places=1, coerce_to_string=False)
-    #category = CategoriesSerializer()
-  #  category = CategoriesSerializer(read_only=True) #, many=True)
-  #  genre = GenresSerializer(many=True) #read_only=True) #, many=True)
-    #genre = GenresSerializer()
-
- #   class Meta:
-        #fields = '__all__'
-  #      fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
-        #fields = ('id', 'name', 'category', 'genre', 'year', 'rating') #name', 'year', 'rating', 'description', 'genre', 'category')
-   #     model = Titles
-
-
-class UpdateTitlesSerializer(serializers.ModelSerializer):
+class TitleWriteSerializer(serializers.ModelSerializer):
     rating = serializers.DecimalField(read_only=True, max_digits=10,
                                       decimal_places=1, coerce_to_string=False)
 
     category = serializers.SlugRelatedField(
-        queryset=Categories.objects.all(),
+        queryset=Category.objects.all(),
         slug_field='slug',
         required=False,
     )
     genre = serializers.SlugRelatedField(
-        queryset=Genres.objects.all(),
+        queryset=Genre.objects.all(),
         slug_field='slug',
         many=True,
         required=False,
         )
 
     class Meta:
-     #   fields = '__all__'
-        fields = ('id', 'name', 'genre', 'category', 'rating', 'year', 'description') #, 'rating', 'description',  'category' 'year',)
-        model = Titles
-
-
-
-
-
- #   rating = serializers.DecimalField(read_only=True, max_digits=10, decimal_places=1, coerce_to_string=False)
- #   category = serializers.SlugRelatedField(many=True,  slug_field='slug', queryset=Categories.objects.all(),) #queryset=Categories.objects.all(),
- #   genre = serializers.SlugRelatedField(many=True,  slug_field='slug', queryset=Genres.objects.all(), required=False,) #, many=True) queryset=Genres.objects.all(),
-
- #   class Meta:
- #       model = Titles
- #       fields = ('id', 'name', 'year', 'rating', 'description',  'genre', 'category')
-        #fields = '__all__'
-
-
-#        def create(self, validated_data):
-#            return Titles(**validated_data)
-
-#        def update(self, instance, validated_data):
-#            instance.name = validated_data.get('name', instance.name)
-#            return instance
-
+        fields = (
+            'id', 'name', 'genre', 'category', 'rating', 'year', 'description')
+        model = Title
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -122,4 +87,18 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
-        model = Comments
+        model = Comment
+
+
+class ReviewCommentPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.method in SAFE_METHODS or (
+                    request.user == obj.author or
+                    request.user.role == 'admin' or
+                    request.user.role == 'moderator' or
+                    request.user.is_staff or request.user.is_superuser)
+
+
+class ReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        return request.method in SAFE_METHODS
