@@ -20,3 +20,8 @@ class ReviewCommentPermission(BasePermission):
                     request.user.role == 'admin' or
                     request.user.role == 'moderator' or
                     request.user.is_staff or request.user.is_superuser)
+
+
+class ReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        return request.method in SAFE_METHODS

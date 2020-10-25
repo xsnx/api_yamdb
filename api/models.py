@@ -40,24 +40,29 @@ class Titles(models.Model):
     score = models.IntegerField(null=True, blank=True,
                                 validators=[MinValueValidator(1),
                                             MaxValueValidator(10)])
-    genre = models.ForeignKey(
-        Genres,
-        on_delete=models.SET_NULL,
-        related_name="titles",
-        blank=True,
-        null=True,
-    )
-    category = models.ForeignKey(
-        Categories,
-        on_delete=models.SET_NULL,
-        related_name='titles',
-        blank=True,
-        null=True,
-    )
+    #genre = models.ManyToManyField(Genres, related_name='genres', related_query_name='query_genres')
+        #, default=None, blank=True)
+ #       Genres,
+ #       related_name='genres',
+ #       blank=True,
+  #  )
+    genre = models.ManyToManyField(Genres) #, verbose_name='genre',blank=True)
+    #genre = models.ForeignKey(Genres, on_delete=models.SET_NULL, related_name="genre", blank=True, null=True)
+#    )
+
+    #category = models.ManyToManyField(Categories)
+    category = models.ForeignKey(Categories, on_delete=models.SET_NULL, related_name='titles', blank=True, null=True,)
+ #   )
 
     def __str__(self):
         return self.name
 
+  #  def get_genres(self):
+  #      return "\n".join([i.name for i in self.genre.all()])
+    
+ #   def get_category(self):
+  #      pass
+ #       return "\n".join([i.name for i in self.category.all()])
 
 class Review(models.Model):
     title = models.ForeignKey(
