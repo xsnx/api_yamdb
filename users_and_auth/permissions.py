@@ -6,7 +6,8 @@ class Permission1(BasePermission):
 
     def has_permission(self, request, view):
         if request.user.role == 'admin' or (
-            request.user.is_staff or
-            request.user.is_superuser):
+                request.user.is_staff or
+                request.user.is_superuser or
+                request.user.is_admin):
             return True
         return False

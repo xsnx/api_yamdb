@@ -14,6 +14,8 @@ from .pagination import CustomPagination
 from rest_framework import status
 from django.core.mail import send_mail
 import random
+from rest_framework.decorators import action
+from django.conf import settings
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -23,17 +25,15 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
     lookup_field = 'username'
 
-
-class UserMeView(APIView):
-    permission_classes = [IsAuthenticated]
-
+    @action(detail=False, methods=['GET'], url_path='me', permission_classes=[IsAuthenticated])
     def get(self, request):
         user = request.user
-        print(user)
         serializer = UserSerializer(user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['PATCH'], url_path='me')
     def patch(self, request):
+        permission_classes = [IsAuthenticated]
         user = request.user
         serializer = UserEditSerializer(
             user, data=request.data, many=False, partial=True)
@@ -42,7 +42,6 @@ class UserMeView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -50,16 +49,14 @@ def get_tokens_for_user(user):
         'access': str(refresh.access_token),
     }
 
-
 @api_view(('POST',))
 def token(request):
     email = request.data.get('email')
     confirmation_code = request.data.get('confirmation_code')
     user = get_object_or_404(
-        User, email=email, confirmation_code=confirmation_code)
+        User, email=email)
     tokens = get_tokens_for_user(user)
     return Response({"message": tokens})
-
 
 @api_view(('POST',))
 def reg_user_email(request):
@@ -69,26 +66,17 @@ def reg_user_email(request):
              status=status.HTTP_403_FORBIDDEN)
     try:
         email = request.data.get('email')
-        a = get_user_model().objects.filter(email=email)
-        if a is not None:
-            return Response({'message': {
-            'Ошибка': 'Пользователь с такой почтой уже зарегистрирован'}})
+        confirmation_code = random.randint(1, 100000000)
+        a, b = get_user_model().objects.get_or_create(
+            email=email, defaults={'confirmation_code': confirmation_code})
     except:
         return Response({'message': {
             'Ошибка': 'Ошибка запроса'}}, status=status.HTTP_403_FORBIDDEN)
-    email = request.data.get('email')
-    confirmation_code = random.randint(200, 1000)
-    try:
-        get_user_model().objects.create(email=email, username=email,
-        confirmation_code=confirmation_code)
-    except:
-        return Response({'message': {
-            'Ошибка': 'Чего-то не создался пользователь'}})
     send_mail(
         'Подтверждение адреса электронной почты YaTube',
         'Вы получили это письмо, потому что регистрируетесь на ресурсе '
         'YaTube Код подтверждения confirmation_code=' + str(confirmation_code),
-        'info@yatube.ru',
+        settings.DEFAULT_FROM_EMAIL,
         [email,],
         fail_silently=False,)
     return Response({'message': {
