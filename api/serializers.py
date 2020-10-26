@@ -1,28 +1,29 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from api.models import Categories, Genres, Titles, Review, Comments
 from rest_framework.validators import UniqueValidator
+
+from api.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
 
-class CategoriesSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100)
     slug = serializers.CharField(max_length=100, validators=[
-        UniqueValidator(queryset=Categories.objects.all())])
+        UniqueValidator(queryset=Category.objects.all())])
 
     class Meta:
-        model = Categories
+        model = Category
         fields = ('name', 'slug')
 
 
-class GenresSerializer(serializers.ModelSerializer):
+class GenreSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100)
     slug = serializers.CharField(max_length=100, validators=[
-        UniqueValidator(queryset=Genres.objects.all())])
+        UniqueValidator(queryset=Genre.objects.all())])
 
     class Meta:
-        model = Genres
+        model = Genre
         fields = ('name', 'slug')
 
 
@@ -30,6 +31,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
 
     def validate(self, attrs):
+        if self.context["request"].method not in ['POST']:
+            return attrs
         author = self.context["request"].user.id,
         title = self.context["view"].kwargs.get("title_id")
         message = 'Author review already exist'
@@ -43,38 +46,36 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date')
 
 
-class TitlesSerializer(serializers.ModelSerializer):
+class TitleReadSerializer(serializers.ModelSerializer):
     rating = serializers.DecimalField(read_only=True, max_digits=10,
                                       decimal_places=1, coerce_to_string=False)
-    category = CategoriesSerializer(read_only=True)
-    genre = GenresSerializer(many=True)
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(many=True)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
-                  'category')
-        model = Titles
+        fields = '__all__'
+        model = Title
 
 
-class TitlesEditSerial(serializers.ModelSerializer):
+class TitleWriteSerial(serializers.ModelSerializer):
     rating = serializers.DecimalField(read_only=True, max_digits=10,
                                       decimal_places=1, coerce_to_string=False)
 
     category = serializers.SlugRelatedField(
-        queryset=Categories.objects.all(),
+        queryset=Category.objects.all(),
         slug_field='slug',
         required=False,
     )
     genre = serializers.SlugRelatedField(
-        queryset=Genres.objects.all(),
+        queryset=Genre.objects.all(),
         slug_field='slug',
         many=True,
         required=False,
         )
 
     class Meta:
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
-                  'category')
-        model = Titles
+        fields = '__all__'
+        model = Title
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -86,4 +87,4 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
-        model = Comments
+        model = Comment

@@ -1,10 +1,8 @@
-from rest_framework_simplejwt.views import (
-        TokenRefreshView,
-    )
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import UserMeView, UserViewSet, token, reg_user_email
+from rest_framework_simplejwt.views import TokenRefreshView
 
+from .views import UserMeView, UserViewSet, reg_user_email, token
 
 urlpatterns = [
     path('v1/auth/token/refresh/', TokenRefreshView.as_view(),

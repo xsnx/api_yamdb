@@ -1,57 +1,47 @@
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
+from rest_framework import filters, mixins, viewsets
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework import viewsets, filters, mixins
 from rest_framework.viewsets import GenericViewSet
+
 from api.filters import TitleFilter
-from api.serializers import CategoriesSerializer, GenresSerializer, \
-    ReviewSerializer, TitlesSerializer, CommentSerializer, TitlesEditSerial
+from api.models import Category, Genre, Review, Title
 from api.permissions import IsAdminOrReadOnly, ReviewCommentPermission
-from api.models import Categories, Genres, Titles, Review
-from rest_framework.response import Response
-from rest_framework.filters import SearchFilter, OrderingFilter
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, ReviewSerializer,
+                             TitleReadSerializer, TitleWriteSerial)
 
 
-class MixinsViewSets(mixins.CreateModelMixin, mixins.DestroyModelMixin,
-                     mixins.ListModelMixin, GenericViewSet):
+class MixinViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin,
+                   mixins.ListModelMixin, GenericViewSet):
     pass
 
 
-class CategoryAPIView(MixinsViewSets):
-    queryset = Categories.objects.all()
-    serializer_class = CategoriesSerializer
+class CategoryAPIView(MixinViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     lookup_field = 'slug'
     permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
 
-    def destroy(self, request, slug):
-        del_genre = self.queryset.filter(slug=slug)
-        del_genre.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-class GenresAPIView(MixinsViewSets):
-    queryset = Genres.objects.all()
-    serializer_class = GenresSerializer
+class GenresAPIView(MixinViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     lookup_field = 'slug'
     permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
-
-    def destroy(self, request, slug):
-        del_genre = self.queryset.filter(slug=slug)
-        del_genre.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TitlesAPIView(viewsets.ModelViewSet):
-    queryset = Titles.objects.annotate(rating=Avg('review__score'))
+    queryset = Title.objects.annotate(rating=Avg('review__score'))
     permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
     __basic_fields = ('genre', 'category', 'year', 'name')
@@ -61,26 +51,26 @@ class TitlesAPIView(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
-            return TitlesSerializer
+            return TitleReadSerializer
         else:
-            return TitlesEditSerial
+            return TitleWriteSerial
 
 
-class ReviewAPIView(viewsets.ModelViewSet):
+class ReviewAPIViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, ReviewCommentPermission]
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
         title = get_object_or_404(
-            Titles,
+            Title,
             id=self.kwargs.get('title_id')
         )
         return title.review.all()
 
     def perform_create(self, serializer):
         title = get_object_or_404(
-            Titles,
+            Title,
             id=self.kwargs.get('title_id')
         )
         serializer.save(

@@ -1,19 +1,19 @@
-from .models import User
-from .serializer import UserSerializer, UserEditSerializer
-from .permissions import Permission1
-from django.shortcuts import get_object_or_404
-from rest_framework.permissions import (
-    IsAuthenticated)
-from rest_framework import viewsets
-from rest_framework.response import Response
+import random
+
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
+from rest_framework import status, viewsets
+from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.decorators import api_view
+
+from .models import User
 from .pagination import CustomPagination
-from rest_framework import status
-from django.core.mail import send_mail
-import random
+from .permissions import Permission1
+from .serializer import UserEditSerializer, UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
