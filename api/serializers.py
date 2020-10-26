@@ -7,6 +7,20 @@ from api.models import Category, Comment, Genre, Review, Title
 User = get_user_model()
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('username', 'role', 'email', 'confirmation_code',
+                  'password', 'bio', 'first_name', 'last_name')
+        model = User
+
+
+class UserEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('username',
+                  'password', 'bio', 'first_name', 'last_name')
+        model = User
+
+
 class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100)
     slug = serializers.CharField(max_length=100, validators=[

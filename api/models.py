@@ -1,10 +1,8 @@
 from datetime import date
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-User = get_user_model()
 
 """
 Ресурс TITLES: произведения, к которым пишут отзывы (определённый фильм, книга или песенка).
@@ -13,6 +11,31 @@ User = get_user_model()
 Ресурс REVIEWS: отзывы на произведения. Отзыв привязан к определённому произведению.
 Ресурс COMMENTS: комментарии к отзывам. Комментарий привязан к определённому отзыву.
 """
+
+
+class User(AbstractUser):
+    ROLES = [('user', 'user'),
+             ('moderator', 'moderator'),
+             ('admin', 'admin'),
+             ]
+    confirmation_code = models.CharField(
+        max_length=400,
+        unique=True,
+        editable=False,
+        null=True,
+        blank=True)
+    role = models.CharField(max_length=10, choices=ROLES, default='user')
+    password = models.CharField(max_length=128, blank=True)
+    email = models.EmailField(max_length=128, blank=False, unique=True)
+    bio = models.CharField(max_length=128, blank=True)
+
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'
 
 
 class Category(models.Model):
