@@ -23,7 +23,7 @@ from api.permissions import (IsAdminOrReadOnly, Permission1,
                              ReviewCommentPermission)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
-                             TitleReadSerializer, TitleWriteSerial,
+                             TitleReadSerializer, TitleWriteSerializer,
                              UserEditSerializer, UserSerializer)
 
 User = get_user_model()
@@ -104,7 +104,7 @@ def reg_user_email(request):
         'Код подтверждения отправлен на электронную почту'}})
 
 
-class CategoryAPIView(MixinViewSet):
+class CategoryAPI(MixinViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = [filters.SearchFilter]
@@ -114,7 +114,7 @@ class CategoryAPIView(MixinViewSet):
     pagination_class = PageNumberPagination
 
 
-class GenresAPIView(MixinViewSet):
+class GenresAPI(MixinViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = [filters.SearchFilter]
@@ -124,7 +124,7 @@ class GenresAPIView(MixinViewSet):
     pagination_class = PageNumberPagination
 
 
-class TitlesAPIView(viewsets.ModelViewSet):
+class TitleAPI(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(rating=Avg('review__score'))
     permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
@@ -137,10 +137,10 @@ class TitlesAPIView(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return TitleReadSerializer
         else:
-            return TitleWriteSerial
+            return TitleWriteSerializer
 
 
-class ReviewAPIViewSet(viewsets.ModelViewSet):
+class ReviewAPI(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, ReviewCommentPermission]
     pagination_class = PageNumberPagination
@@ -163,7 +163,7 @@ class ReviewAPIViewSet(viewsets.ModelViewSet):
         )
 
 
-class CommentsAPIView(viewsets.ModelViewSet):
+class CommentsAPI(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     filter_backends = [filters.SearchFilter]
     permission_classes = [IsAuthenticatedOrReadOnly, ReviewCommentPermission]
@@ -177,11 +177,11 @@ class CommentsAPIView(viewsets.ModelViewSet):
         return queryset.comments.all()
 
     def perform_create(self, serializer):
-        reviews = get_object_or_404(
+        review = get_object_or_404(
             Review,
             id=self.kwargs.get("review_id"),
             title__id=self.kwargs.get("title_id"), )
         serializer.save(
             author=self.request.user,
-            reviews=reviews
+            reviews=review
         )

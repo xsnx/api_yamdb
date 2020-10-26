@@ -71,7 +71,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
         model = Title
 
 
-class TitleWriteSerial(serializers.ModelSerializer):
+class TitleWriteSerializer(serializers.ModelSerializer):
     rating = serializers.DecimalField(read_only=True, max_digits=10,
                                       decimal_places=1, coerce_to_string=False)
 
