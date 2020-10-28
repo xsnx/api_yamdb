@@ -1,7 +1,8 @@
-import random
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
@@ -19,7 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from api.filters import TitleFilter
 from api.models import Category, Genre, Review, Title
 from api.pagination import CustomPagination
-from api.permissions import (IsAdminOrReadOnly, Permission1,
+from api.permissions import (IsAdminOrReadOnly, PermissionAdmin,
                              ReviewCommentPermission)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
@@ -37,20 +38,20 @@ class MixinViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin,
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, Permission1]
+    permission_classes = [IsAuthenticated, PermissionAdmin]
     pagination_class = CustomPagination
     lookup_field = 'username'
 
-    @action(detail=False, methods=['GET'], url_path='me',
-            permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['GET'],
+            url_path='me', permission_classes=[IsAuthenticated])
     def get(self, request):
         user = request.user
         serializer = UserSerializer(user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['PATCH'], url_path='me')
+    @action(detail=True, methods=['PATCH'],
+            url_path='me', permission_classes=[IsAuthenticated])
     def patch(self, request):
-        permission_classes = [IsAuthenticated]
         user = request.user
         serializer = UserEditSerializer(
             user, data=request.data, many=False, partial=True)
@@ -73,35 +74,47 @@ def token(request):
     email = request.data.get('email')
     confirmation_code = request.data.get('confirmation_code')
     user = get_object_or_404(
-        User, email=email)
+        User, email=email, confirmation_code=confirmation_code)
     tokens = get_tokens_for_user(user)
     return Response({"message": tokens})
 
 
 @api_view(('POST',))
 def reg_user_email(request):
-    if not request.data.get('email'):
+    email = request.data.get('email')
+    if not email:
         return Response({'message': {
             'Ошибка': 'Не указана почта для регистрации'}},
-             status=status.HTTP_403_FORBIDDEN)
+            status=status.HTTP_403_FORBIDDEN)
+    code = PasswordResetTokenGenerator()
+    user = User
+    user.email = email
+    user.last_login = datetime.now()
+    user.password = ''
+    confirmation_code = code.make_token(user)
     try:
-        email = request.data.get('email')
-        confirmation_code = random.randint(1, 100000000)
-        a, b = User.objects.get_or_create(
-            email=email, defaults={'confirmation_code': confirmation_code})
+        query_get, flag = User.objects.get_or_create(
+            email=email,
+            defaults={'username': email,
+                      'confirmation_code': confirmation_code})
+        if not flag:
+            return Response({'message': {
+                'Ошибка': 'Пользователь с таким email уже существует.'}},
+                status=status.HTTP_403_FORBIDDEN)
     except:
         return Response({'message': {
             'Ошибка': 'Ошибка запроса'}}, status=status.HTTP_403_FORBIDDEN)
     send_mail(
         'Подтверждение адреса электронной почты YaTube',
         'Вы получили это письмо, потому что регистрируетесь на ресурсе '
-        'YaTube Код подтверждения confirmation_code=' + str(confirmation_code),
+        'YaTube Код подтверждения confirmation_code = '
+        + str(confirmation_code),
         settings.DEFAULT_FROM_EMAIL,
-        [email,],
-        fail_silently=False,)
+        [email, ],
+        fail_silently=False, )
     return Response({'message': {
         'ОК': f'Пользователь c email {email} создан успешно. '
-        'Код подтверждения отправлен на электронную почту'}})
+              'Код подтверждения отправлен на электронную почту'}})
 
 
 class CategoryAPI(MixinViewSet):
@@ -163,7 +176,7 @@ class ReviewAPI(viewsets.ModelViewSet):
         )
 
 
-class CommentsAPI(viewsets.ModelViewSet):
+class CommentAPI(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     filter_backends = [filters.SearchFilter]
     permission_classes = [IsAuthenticatedOrReadOnly, ReviewCommentPermission]

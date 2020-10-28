@@ -45,13 +45,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
 
     def validate(self, attrs):
-        if self.context["request"].method not in ['POST']:
+        if self.context["request"].method != 'POST':
             return attrs
         author = self.context["request"].user.id,
         title = self.context["view"].kwargs.get("title_id")
         message = 'Author review already exist'
-        if not self.instance and Review.objects.filter(title=title,
-                                                       author=author).exists():
+        review = Review.objects.filter(title=title, author=author).exists()
+        if not self.instance and review:
             raise serializers.ValidationError(message)
         return attrs
 

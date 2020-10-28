@@ -1,7 +1,7 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
-class Permission1(BasePermission):
+class PermissionAdmin(BasePermission):
     massage = "Нет прав на данное действие"
 
     def has_permission(self, request, view):
