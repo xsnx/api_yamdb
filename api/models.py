@@ -15,10 +15,10 @@ from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
-    class Role(models.TextChoices):
-        USER = 'user', _('user')
-        MODERATOR = 'moderator', _('moderator')
-        ADMIN = 'admin', _('admin')
+    ROLES = [('user', 'user'),
+             ('moderator', 'moderator'),
+             ('admin', 'admin'),
+             ]
 
     confirmation_code = models.CharField(
         max_length=400,
@@ -27,20 +27,25 @@ class User(AbstractUser):
         null=True,
         blank=True)
     role = models.CharField(
-        max_length=10,
-        choices=Role.choices,
-        default=Role.USER)
+        max_length=20,
+        choices=ROLES,
+        default='user')
     password = models.CharField(max_length=128, blank=True)
     email = models.EmailField(max_length=128, blank=False, unique=True)
     bio = models.CharField(max_length=128, blank=True)
 
     @property
     def is_admin(self):
-        return self.role == self.Role.ADMIN
+        return self.role == 'admin'
 
     @property
     def is_moderator(self):
-        return self.role == self.Role.MODERATOR
+        return self.role == 'moderator'
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
 
 
 class Category(models.Model):
@@ -49,6 +54,7 @@ class Category(models.Model):
     slug = models.SlugField(max_length=100)
 
     class Meta:
+        verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
         ordering = ['name']
 
@@ -61,6 +67,7 @@ class Genre(models.Model):
     slug = models.SlugField(max_length=100)
 
     class Meta:
+        verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
         ordering = ['name']
 
@@ -92,6 +99,11 @@ class Title(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
+        ordering = ['year']
+
 
 class Review(models.Model):
     title = models.ForeignKey(
@@ -106,12 +118,14 @@ class Review(models.Model):
         related_name="review"
     )
     pub_date = models.DateTimeField("review date", auto_now_add=True)
-    score = models.IntegerField(null=True, blank=True,
-                                validators=[MinValueValidator(1),
-                                            MaxValueValidator(10)])
+    score = models.PositiveSmallIntegerField(null=True, blank=True, 
+                                             validators=[MinValueValidator(1),
+                                                         MaxValueValidator(10)])
 
     class Meta:
         unique_together = ['author', 'title']
+        verbose_name = 'Рецензия'
+        verbose_name_plural = 'Рецензии'
         ordering = ['-pub_date']
 
     def __str__(self):
@@ -132,6 +146,8 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ['-pub_date']
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
 
     def __str__(self):
         return self.text
